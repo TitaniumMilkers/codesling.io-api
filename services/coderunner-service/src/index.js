@@ -20,33 +20,31 @@ app.use((req, res, next) => {
 });
 
 app.post('/submit-code', (req, res) => {
-  //need name, pass tests in from client.
-  //then add test results to response
-  // req.body.testCases.
 
-  // would run tests here on user's code of req.body.code
-  // following the below method
-  // var funcAsGiven = 'function square(num) {return num * num; }';
+  console.log('da body', req.body);
 
-  // //test info:
-  // var testName = 'should return the square of an integer'
-  // var funcName = 'square'
-  // var testInput = 7
-  // var testOutput = 49
+  var testResults = req.body.testCases.slice();
+
+  // var testResults =[];
+
   
-  // //adding test to user's func:
-  // var funcWithTest = funcAsGiven + ` ${funcName}(${testInput})`;
-  
-  // //running tests
-  // var evaluateFunc = function(){
-  //   if (eval(funcWithTest) === testOutput){
-  //     console.log(eval(funcWithTest));
-  //     console.log(`test ${testName} passed`);
-  //   } else {
-  //     console.log(`test ${testName} failed`);
-  //   }
-  // };
-  // evaluateFunc();
+  for (let i = 0; i < req.body.testCases.length; i++) {
+    var funcWithTest = req.body.code + ` ${req.body.challengeTitle}(${req.body.testCases[i].content[1]})`;
+      var result = eval(funcWithTest);
+      testResults[i].content[3] = result;
+    if (result === req.body.testCases[i].content[2]){
+      testResults[i].content[4] = true;
+      console.log(`test ${req.body.testCases[i].content[0]} passed`);
+    } else {
+      console.log(`test ${req.body.testCases[i].content[0]} failed`);
+      testResults[i].content[4] = false;
+    } 
+  }
+
+  //results to be sent back to client
+  console.log('results', testResults);
+
+
 
   tmp.file({ postfix: '.js' }, (errCreatingTmpFile, path) => {
     writeFile(path, req.body.code, (errWritingFile) => {
@@ -61,14 +59,9 @@ app.post('/submit-code', (req, res) => {
             console.log('stderrformatted', stderrFormatted);
             res.send(stderrFormatted);
           } else {
-
-            // req.body.testCases to access the array of test cases
-            
-            // need to test stdout vs the array of testCases
-
             console.log('stdout', stdout);
-            res.write(JSON.stringify(stdout));
-            res.send();
+            // res.write(JSON.stringify(stdout));
+            res.send({stdout: JSON.stringify(stdout), testResults: testResults});
           }
         });
       }
